@@ -24,9 +24,11 @@ class Marker(AbstractMarker) :
         for md in markdown_files :
             links = self.extract_image_links(md)
             for link in links :
+                self.count(image_files, link)
                 self.is_alive(md, link) # todo : migrate to health checker
             
-
+    def count(self, image_files, link) :
+        link['src']
     def collect_fileinfo(self, pattern) :
         fileinfo = []
         for root, dir, files in os.walk(".") :
