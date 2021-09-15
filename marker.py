@@ -22,6 +22,7 @@ class Marker(AbstractMarker) :
             links = self.extract_image_links(md)
             for link in links :
                 self.is_alive(md, link)
+            
 
     def collect_fileinfo(self, pattern) :
         fileinfo = []

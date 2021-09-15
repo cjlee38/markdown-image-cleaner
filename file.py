@@ -1,9 +1,13 @@
+import os
 from abc import *
 
 class FileInfo(metaclass = ABCMeta) :
     def __init__(self, name, path) :
         self.name = name
-        self.abs_path, self.rel_path = parse_path(path)
+        self.abs_path, self.rel_path = self.parse_path(path)
+
+    def parse_path(self, path) :
+        pass
 
     def get_name(self) :
         return self.name
