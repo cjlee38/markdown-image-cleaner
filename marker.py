@@ -15,7 +15,8 @@ class Marker(AbstractMarker) :
 
     def mark(self) :
         markdown_files = self.collect_fileinfo(RegexHandler.MARKDOWN_FILE)
-        # image_files = self.collect_filename(RegexHandler.IMAGE_FILE)
+        image_files = self.collect_fileinfo(RegexHandler.IMAGE_FILE)
+        print(image_files)
 
         for md in markdown_files :
             links = self.extract_image_links(md)
@@ -55,8 +56,9 @@ class Marker(AbstractMarker) :
 
     def is_alive(self, md, link) :
         image = md['directory'] + '/' + link['src']
-        print(image)
-        print(os.path.isfile(image))
+        # print(image)
+        return os.path.isfile(image)
+        # print(os.path.isfile(image))
         # print('md = ', md)
         # print('link = ', link)
 
