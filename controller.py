@@ -14,6 +14,7 @@ def set_clean_type() :
 
 '''
 # Todo
+http requests for check if alive
 root directory settings
 ignore folder or file settings
 '''
