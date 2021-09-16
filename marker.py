@@ -29,10 +29,7 @@ class Marker(AbstractMarker) :
         for root, dir, files in os.walk(".") :
             for file in files :
                 if RegexHandler.is_pattern_match(file, pattern) :
-                    fileinfo.append({
-                        'directory' : root,
-                        'filename' : file
-                    })
+                    fileinfo.append(FileInfo(name = file, path = root))
         return fileinfo
         
 
