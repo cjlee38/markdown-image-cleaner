@@ -14,6 +14,9 @@ class Marker(AbstractMarker) :
         pass
 
     def mark(self) :
+        '''
+        returns a list of image files not linked to markdown text
+        '''
         markdown_files = self.collect_fileinfo(RegexHandler.MARKDOWN_FILE)
         image_files = self.collect_fileinfo(RegexHandler.IMAGE_FILE)
         print(image_files)
@@ -21,9 +24,11 @@ class Marker(AbstractMarker) :
         for md in markdown_files :
             links = self.extract_image_links(md)
             for link in links :
-                self.is_alive(md, link)
+                self.count(image_files, link)
+                self.is_alive(md, link) # todo : migrate to health checker
             
-
+    def count(self, image_files, link) :
+        link['src']
     def collect_fileinfo(self, pattern) :
         fileinfo = []
         for root, dir, files in os.walk(".") :
@@ -62,7 +67,7 @@ class Marker(AbstractMarker) :
 
 if __name__ == '__main__' :
     print("Test of Marker starts ")
-    if len(sys.argv) > 1 :
+    if len(sys.argv) == 2 :
         os.chdir(sys.argv[1])
     marker = Marker()
     marker.mark()
