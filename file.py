@@ -1,8 +1,13 @@
+from custom_enum import RegexHandler
 import os
 from abc import *
 
 class Component(ABC) :
 
+    def __init__(self, name) :
+        self._parent = None
+        self._name = name
+    
     @property
     def parent(self) :
         return self._parent
@@ -24,27 +29,52 @@ class Component(ABC) :
     def operation(self) :
         pass
 
-class FileInfo(ABC) :
-    def __init__(self, name, path) :
-        self.name = name
-        self.abs_path, self.rel_path = self.parse_path(path)
+    def print(self, depth) :
+        tab = " -- " * depth
+        parent = self._parent._name if depth != 0 else ''
+        print(tab, self._name + '({})'.format(parent))
+        if isinstance(self, Directory) :
+            for child in self._children :
+                child.print(depth + 1)
 
-    def parse_path(self, path) :
-        # todo : fix this lol
-        pass
+       
+class Directory(Component) :
 
-    def get_name(self) :
-        return self.name
+    def __init__(self, name) :
+        super().__init__(name)
+        self._children = []
     
-    def get_abs_path(self) :
-        return self.abs_path
+    def add(self, component) :
+        self._children.append(component)
+        component.parent = self
+            
+    def get(self, name) :
+        for child in self._children :
+            if child._name == name :
+                return child
+        return None
 
-    def get_rel_path(self) :
-        return self.rel_path
+    def remove(self, component) :
+        self._children.remove(component)
+        component.parent = None
+    
+    def operation(self) :
+        results = []
+        for child in self._children :
+            results.append(child)
+        return results
 
-class MarkdownInfo(FileInfo) :
-    def __init__(self, name, path) :
-        super().__init__(name, path)
+class File(Component) :
+
+    def __init__(self, name) :
+        super().__init__(name)
+
+    def operation(self) :
+        return "Leaf"
+
+class MarkdownFile(File) :
+    def __init__(self, name) :
+        super().__init__(name)
         self.links = {}
     
     def extract_links(self) :
@@ -55,9 +85,15 @@ class MarkdownInfo(FileInfo) :
     def get_links(self) :
         return self.links
 
-class ImageInfo(FileInfo) :
-    def __init__(self, name, path) :
-        super().__init__(name, path)
+    def extract_image_links(self, fileinfo) :
+        pass
+
+    def is_alive(self, md, link) :
+        pass
+
+class ImageFile(File) :
+    def __init__(self, name) :
+        super().__init__(name)
         self.count = 0
     
     def decrease(self) :
@@ -67,31 +103,40 @@ class ImageInfo(FileInfo) :
     def get_count(self) :
         return self.count
 
+class FileTree :
+    
+    def __init__(self, root) :
+        self._root = root
+        self._tree = None
+    
+    def collect(self) :
+        self._tree = Directory(self._root)
+        for parent, dirs, files in os.walk(self._root) :
+            p = self.find(self._tree, parent)
+            for dir in dirs :
+                p.add(Directory(dir))
+            for file in files :
+                if RegexHandler.is_pattern_match(file, RegexHandler.MARKDOWN_FILE) :
+                    p.add(MarkdownFile(file))
+                if RegexHandler.is_pattern_match(file, RegexHandler.IMAGE_FILE) :
+                    p.add(ImageFile(file))
+    
+    def find(self, parent: Component, route: str) -> Component:
+        if parent._name == route :
+            return parent
+        p = parent
+        for r in route.split("/")[1:] :
+            p = p.get(r)
+        return p
+    
+    def print(self) :
+        self._tree.print(0)
 
-# ------------------ #
-    def extract_image_links(self, fileinfo) :
-        def parse_link(sentence) :
-            split = RegexHandler.IMAGE_LINK.findall(sentence)[0]
-            ret = {
-                'alt' : split[0], 
-                'src' : split[1]
-            }
-            return ret
-
-        fp = open(fileinfo['directory'] + '/' + fileinfo['filename'], 'r')
-        links = []
-        while True :
-            sentence = fp.readline()
-            if not sentence : break
-            if RegexHandler.is_pattern_match(sentence, RegexHandler.IMAGE_LINK) :
-                links.append(parse_link(sentence))
-        fp.close()
-        return links
-
-    def is_alive(self, md, link) :
-        image = md['directory'] + '/' + link['src']
-        # print(image)
-        return os.path.isfile(image)
-        # print(os.path.isfile(image))
-        # print('md = ', md)
-        # print('link = ', link)
+if __name__ == '__main__' :
+    print("file test code starts")
+    # os.path.isabs()
+    os.chdir("/Users/cjlee/Desktop/workspace/markdown-image-cleaner")
+    f = FileTree(".")
+    f.collect()
+    f.print()
+    

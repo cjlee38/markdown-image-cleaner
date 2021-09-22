@@ -13,4 +13,6 @@ class RegexHandler() :
 	def is_pattern_match(name, regex) :
 		return regex.search(name) is not None
 
-	
+class ContentType(Enum) :
+	DIRECTORY = auto()
+	FILE = auto()
