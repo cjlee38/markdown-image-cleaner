@@ -1,6 +1,7 @@
 from marker import Marker
 from cleaner import *
 from custom_enum import *
+from file import *
 import sys
 
 
@@ -14,11 +15,12 @@ def set_clean_type() :
 
 '''
 # Todo
-http requests for check if alive
 root directory settings
 ignore folder or file settings
 '''
 if __name__ == "__main__" :
-    clean_type = sys.argv[1]
-    marker = Marker()
+    # clean_type = sys.argv[1]
+    f = FileTree(".")
+    f.build()
+    marker = Marker(f)
     l = marker.mark()

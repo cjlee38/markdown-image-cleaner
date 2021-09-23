@@ -17,8 +17,8 @@ class Marker(AbstractMarker) :
 
     def mark(self) :
         deadlinks = [self.checkoff(pathfile) for pathfile in self.traverse()]
-        unlinked = list(self._file_tree.get_garbages())
-        return deadlinks, unlinked
+        unlinks = list(self._file_tree.get_garbages())
+        return deadlinks, unlinks
 
     def traverse(self) :
         for parent, dirs, files in os.walk(self._file_tree.get_root()) :
