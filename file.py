@@ -21,6 +21,13 @@ class FileInfo(metaclass = ABCMeta) :
 class MarkdownInfo(FileInfo) :
     def __init__(self, name, path) :
         super().__init__(name, path)
+
+    def operation(self) :
+        return "Leaf"
+
+class MarkdownFile(File) :
+    def __init__(self, name, path) :
+        super().__init__(name, path)
         self._links = {}
     
     def extract(self) :
@@ -34,6 +41,9 @@ class MarkdownInfo(FileInfo) :
 
     def get_links(self) :
         return self._links
+
+    def extract(self, fileinfo) :
+        pass
 
 class ImageInfo(FileInfo) :
     def __init__(self, name, path) :
@@ -82,6 +92,7 @@ class FileTree :
 
     def get_root(self) :
         return self._root
+<<<<<<< Updated upstream
 
     def count(self, pathfile) :
         p = self.find(pathfile)
@@ -90,6 +101,16 @@ class FileTree :
             return True
         return False
 
+=======
+
+    def count(self, pathfile) :
+        p = self.find(pathfile)
+        if p :
+            p.increase()
+            return True
+        return False
+
+>>>>>>> Stashed changes
     def get_garbages(self) :
         return self._get_garbages(self._tree)
     
