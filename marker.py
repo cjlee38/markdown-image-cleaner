@@ -11,15 +11,15 @@ class AbstractMarker(metaclass = ABCMeta) :
         pass
 
 class Marker(AbstractMarker) :
-    def __init__(self, root) :
-        self.root = root
-        self.file_tree = None
+    def __init__(self, file_tree) :
+        self.file_tree = file_tree
 
     def mark(self) :
         '''
         returns a list of image files not linked to markdown text
         '''
-        
+        for md in self.file_tree.traverse() :
+            md.extract()
 
 
 
@@ -28,6 +28,7 @@ if __name__ == '__main__' :
     if len(sys.argv) == 2 :
         os.chdir(sys.argv[1])
     os.chdir("/Users/cjlee/Desktop/workspace/markdown-image-cleaner/sample")
-    marker = Marker(".")
+    filetree = FileTree(".")
+    filetree.collect()
+    marker = Marker(filetree)
     marker.mark()
-    marker.file_struct.print()
