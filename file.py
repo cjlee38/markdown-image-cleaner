@@ -1,24 +1,78 @@
+from custom_enum import RegexHandler
 import os
 from abc import *
 
-class FileInfo(metaclass = ABCMeta) :
-    def __init__(self, name, path) :
-        self.name = name
-        self.abs_path, self.rel_path = self.parse_path(path)
+class Component(ABC) :
 
-    def parse_path(self, path) :
+    def __init__(self, name, path) :
+        self._parent = None
+        self._path = path
+        self._name = name
+    
+    @property
+    def parent(self) :
+        return self._parent
+    
+    @parent.setter
+    def parent(self, parent) :
+        self._parent = parent
+    
+    def add(self, component) -> None :
+        pass
+    
+    def remove(self, component) -> None :
         pass
 
-    def get_name(self) :
-        return self.name
+    def is_composite(self) -> bool :
+        return False
+
+    @abstractmethod
+    def operation(self) :
+        pass
+
+    def print(self, depth) :
+        tab = " -- " * depth
+        parent = self._parent._name if depth != 0 else ''
+        print(tab, self._name + '(parent = {})(path = {})'.format(parent, self._path))
+        if isinstance(self, Directory) :
+            for child in self._children :
+                child.print(depth + 1)
+     
+class Directory(Component) :
+
+    def __init__(self, name, path) :
+        super().__init__(name, path)
+        self._children = []
     
-    def get_abs_path(self) :
-        return self.abs_path
+    def add(self, component) :
+        self._children.append(component)
+        component.parent = self
+            
+    def get(self, name) :
+        for child in self._children :
+            if child._name == name :
+                return child
+        return None
 
-    def get_rel_path(self) :
-        return self.rel_path
+    def remove(self, component) :
+        self._children.remove(component)
+        component.parent = None
+    
+    def operation(self) :
+        results = []
+        for child in self._children :
+            results.append(child)
+        return results
 
-class MarkdownInfo(FileInfo) :
+class File(Component) :
+
+    def __init__(self, name, path) :
+        super().__init__(name, path)
+
+    def operation(self) :
+        return "Leaf"
+
+class MarkdownFile(File) :
     def __init__(self, name, path) :
         super().__init__(name, path)
 
@@ -31,12 +85,7 @@ class MarkdownFile(File) :
         self._links = {}
     
     def extract(self) :
-        # with open(self._path + "/" + self._name, 'r', encoding = 'UTF-8') as f :
-        #     for line in f.readlines() :
-        #         if RegexHandler.is_pattern_match(RegexHandler.IMAGE_LINK) :
-        #             self._links.
-        # self.links['image'] = self.extract_image_links()
-        # self.links['url'] = self.extract_url_links()
+        
         return self._links
 
     def get_links(self) :
@@ -45,7 +94,13 @@ class MarkdownFile(File) :
     def extract(self, fileinfo) :
         pass
 
-class ImageInfo(FileInfo) :
+    def extract(self, fileinfo) :
+        pass
+
+    def is_alive(self, md, link) :
+        pass
+
+class ImageFile(File) :
     def __init__(self, name, path) :
         super().__init__(name, path)
         self._count = 0
@@ -92,7 +147,6 @@ class FileTree :
 
     def get_root(self) :
         return self._root
-<<<<<<< Updated upstream
 
     def count(self, pathfile) :
         p = self.find(pathfile)
@@ -101,16 +155,6 @@ class FileTree :
             return True
         return False
 
-=======
-
-    def count(self, pathfile) :
-        p = self.find(pathfile)
-        if p :
-            p.increase()
-            return True
-        return False
-
->>>>>>> Stashed changes
     def get_garbages(self) :
         return self._get_garbages(self._tree)
     
@@ -120,7 +164,6 @@ class FileTree :
                 yield from self._get_garbages(child)
             elif isinstance(child, ImageFile) and child._count == 0 :
                 yield child._path + "/" + child._name
-
         
 
 if __name__ == '__main__' :
