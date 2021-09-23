@@ -1,7 +1,8 @@
 import os
 import re
 import sys
-from custom_enum import RegexHandler
+from custom_enum import RegexHandler, ContentType
+from web import Requester
 from abc import *
 
 class AbstractMarker(metaclass = ABCMeta) :
@@ -10,44 +11,48 @@ class AbstractMarker(metaclass = ABCMeta) :
         pass
 
 class Marker(AbstractMarker) :
-    def __init__(self, root) :
-        self.root = root
-        self.image_files = self.collect_fileinfo(RegexHandler.IMAGE_FILE, root = root)
-        pass
-
-    def collect_fileinfo(self, pattern, root) :
-        fileinfo = []
-        for root, dir, files in os.walk(root) :
-            for file in files :
-                if RegexHandler.is_pattern_match(file, pattern) :
-                    fileinfo.append(FileInfo(name = file, path = root))
-        return fileinfo
+    def __init__(self, file_tree) :
+        self._file_tree = file_tree
 
     def mark(self) :
-        '''
-        returns a list of image files not linked to markdown text
-        '''
-        for markdown_info in self.traverse() :
-            links = markdown_info.extract_links()
-            for link in links :
-                if link.is_alive() :
-                    self.count(link)
-    
+        deads = []
+        for pathfile in self.traverse() :
+            deads.extend(self.checkoff(pathfile))
+        unlinked = self._file_tree.get_garbages()
+        return deads, unlinked
+
     def traverse(self) :
-        for root, dir, files in os.walk(self.root) :
+        for parent, dirs, files in os.walk(self._file_tree.get_root()) :
             for file in files :
                 if RegexHandler.is_pattern_match(file, RegexHandler.MARKDOWN_FILE) :
-                    yield MarkdownInfo(name = file, path = root)
+                    yield "/".join([parent, file])
 
+    def checkoff(self, pathfile) :
+        deads = []
+        with open(pathfile, 'r', encoding = 'UTF-8') as f :
+            for line in f.readlines() :
+                search = RegexHandler.IMAGE_LINK.search(line)
+                if search :
+                    link = search.group(2)
+                    if link.startswith('http') :
+                        if not Requester.is_alive(link) :
+                            deads.append(link)
+                    elif not self._file_tree.count(link) : # link url
+                        deads.append(link)
+        return deads
 
-    def count(self, image_files, link) :
-        link['src']
 
 
 
 if __name__ == '__main__' :
-    print("Test of Marker starts ")
+    print("  Test of Marker starts  ")
     if len(sys.argv) == 2 :
         os.chdir(sys.argv[1])
-    marker = Marker()
-    marker.mark()
+    filetree = FileTree(".")
+    filetree.build()
+    marker = Marker(filetree)
+    res = marker.mark()
+    print(res[0])
+    for i in res[1] :
+        print(i)
+
