@@ -70,34 +70,6 @@ class File(Component) :
         super().__init__(name, path)
 
     def operation(self) :
-        return "Leaf"
-
-class MarkdownFile(File) :
-    def __init__(self, name, path) :
-        super().__init__(name, path)
-
-    def operation(self) :
-        return "Leaf"
-
-class MarkdownFile(File) :
-    def __init__(self, name, path) :
-        super().__init__(name, path)
-        self._links = {}
-    
-    def extract(self) :
-        
-        return self._links
-
-    def get_links(self) :
-        return self._links
-
-    def extract(self, fileinfo) :
-        pass
-
-    def extract(self, fileinfo) :
-        pass
-
-    def is_alive(self, md, link) :
         pass
 
 class ImageFile(File) :
@@ -148,7 +120,7 @@ class FileTree :
     def get_root(self) :
         return self._root
 
-    def count(self, pathfile) :
+    def is_alive(self, pathfile) :
         p = self.find(pathfile)
         if p :
             p.increase()
