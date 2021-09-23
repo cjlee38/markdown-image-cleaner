@@ -2,10 +2,7 @@ import os
 import re
 import sys
 from custom_enum import RegexHandler, ContentType
-<<<<<<< HEAD
 from web import Requester
-=======
->>>>>>> file
 from abc import *
 from file import *
 
@@ -16,7 +13,6 @@ class AbstractMarker(metaclass = ABCMeta) :
 
 class Marker(AbstractMarker) :
     def __init__(self, file_tree) :
-<<<<<<< HEAD
         self._file_tree = file_tree
 
     def mark(self) :
@@ -46,16 +42,6 @@ class Marker(AbstractMarker) :
                         deads.append(link)
         return deads
 
-=======
-        self.file_tree = file_tree
-
-    def mark(self) :
-        '''
-        returns a list of image files not linked to markdown text
-        '''
-        for md in self.file_tree.traverse() :
-            md.extract()
->>>>>>> file
 
 
 
@@ -63,7 +49,6 @@ if __name__ == '__main__' :
     print("  Test of Marker starts  ")
     if len(sys.argv) == 2 :
         os.chdir(sys.argv[1])
-<<<<<<< HEAD
     filetree = FileTree(".")
     filetree.build()
     marker = Marker(filetree)
@@ -72,10 +57,3 @@ if __name__ == '__main__' :
     for i in res[1] :
         print(i)
 
-=======
-    os.chdir("/Users/cjlee/Desktop/workspace/markdown-image-cleaner/sample")
-    filetree = FileTree(".")
-    filetree.collect()
-    marker = Marker(filetree)
-    marker.mark()
->>>>>>> file
