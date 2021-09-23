@@ -2,17 +2,23 @@
 
 This is a sample file.  
 
-## First Image : alive & linked
+## 1 : alive & linked
 ![AliveAndLinked](./images/AliveAndLinked.png)
 
-## Second Image : alive but unlinked
+
+## 2 : alive but unlinked
 
 ![AliveButUnlinked](./images/_AliveButUnlinked.png)
 
-## Third Image : dead
+## 3 : dead
 
 ![Dead](./images/Dead.png)
 
+## 4 : http alive
+
+![http-alive](https://github.com/cjlee38/markdown-image-cleaner/blob/master/sample/images/AliveAndLinked.png?raw=true)
 
 
+## 5 : http dead
 
+![http-dead](https://github.com/cjlee38/markdown-image-cleaner/blob/master/sample/images/Dead.png?raw=true)
