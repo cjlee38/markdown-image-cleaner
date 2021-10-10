@@ -100,11 +100,10 @@ class FileTree :
                 if RegexHandler.is_pattern_match(file, RegexHandler.IMAGE_FILE) :
                     p.add(ImageFile(file, parent))
     
-    def find(self, path: str) -> Component:
+    def find(self, path: str, debug = False) -> Component:
         p = self._tree
         if p._name == path :
             return p
-
         for r in path.split(os.sep) :
             if r == '.' :
                 continue
@@ -121,7 +120,7 @@ class FileTree :
         return self._root
 
     def is_alive(self, pathfile) :
-        p = self.find(pathfile)
+        p = self.find(pathfile, debug = True)
         if p :
             p.increase()
             return True
@@ -141,9 +140,9 @@ class FileTree :
 if __name__ == '__main__' :
     print("file test code starts")
     # os.path.isabs()
-    os.chdir("../")
+    os.chdir("./sample")
     # os.chdir("/Users/cjlee/Desktop/workspace/markdown-image-cleaner")
     f = FileTree(".")
-    f.collect()
+    f.build()
     f.print()
     

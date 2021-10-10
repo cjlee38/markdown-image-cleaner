@@ -24,3 +24,4 @@ if __name__ == "__main__" :
     f.build()
     marker = Marker(f)
     l = marker.mark()
+    print(l)

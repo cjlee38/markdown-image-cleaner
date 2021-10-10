@@ -12,35 +12,65 @@ class AbstractMarker(ABC) :
         pass
 
 class Marker(AbstractMarker) :
+
     def __init__(self, file_tree) :
         self._file_tree = file_tree
 
     def mark(self) :
-        deadlinks = [self.checkoff(pathfile) for pathfile in self.traverse()]
-        unlinks = list(self._file_tree.get_garbages())
-        return deadlinks, unlinks
+        marked = {
+            'dangles' : {},
+            'leaks' : []
+        }
+        for parent, file in self.traverse() :
+            check = self.checkoff(parent, file)
+            if check :
+                marked['dangles'][parent + "/" + file] = check
+        marked['leaks'] = list(self._file_tree.get_garbages())
+        return marked
 
-    def traverse(self) :
+    def traverse(self) -> tuple :
         for parent, dirs, files in os.walk(self._file_tree.get_root()) :
             for file in files :
                 if RegexHandler.is_pattern_match(file, RegexHandler.MARKDOWN_FILE) :
-                    yield "/".join([parent, file])
+                    yield parent, file
 
-    def checkoff(self, pathfile) :
+    def checkoff(self, parent: str, file: str) :
+        '''
+        collect dead links while reading each line.
+        '''
         deadlinks = []
+        pathfile = "/".join([parent, file])
         with open(pathfile, 'r', encoding = 'UTF-8') as f :
             for idx, line in enumerate(f.readlines()) :
-                if not self.inspect(line) :
+                image_link = self.is_image_link(line, parent)
+                if image_link and not self.pulse(image_link):
                     deadlinks.append(DeadLink(idx, line, pathfile))
         return deadlinks
 
-    def inspect(self, line) -> None :
+    def is_image_link(self, line: str, parent: str) -> str :
+        '''
+        Check if readline has image_link and that link is alive.
+        If It matches to IMAGE_LINK(regex) and dead, then return False.
+        '''
         search = RegexHandler.IMAGE_LINK.search(line)
-        if search and not self.pulse(search.group(2)) :
-            return False
-        return True
+        if search :
+            return self.rebuild_link(parent, search.group(2))
+        return None
+
+    def rebuild_link(self, parent: str, image_link: str) :
+        '''
+        match image_link path to real path
+        '''
+        if image_link.startswith("/") or image_link.startswith("http"):
+            return image_link
+        return "/".join([parent, image_link])
             
-    def pulse(self, link) :
+    def pulse(self, link: str) -> bool:
+        '''
+        Heart beat to image_file.
+        If it is a kind of file, FileTree gonna check if it's alive.
+        Or a kind of http, Requester gonna check.
+        '''
         if link.startswith('http') :
             return Requester.is_alive(link)
         return self._file_tree.is_alive(link)
@@ -52,7 +82,7 @@ class DeadLink :
         self._md = md
     
     def __repr__(self) :
-        return self._md + "(" + self._link + ")"
+        return f"{self._link}({self._md}, index : {self._idx})"
 
 
 if __name__ == '__main__' :
@@ -63,6 +93,6 @@ if __name__ == '__main__' :
     filetree.build()
     marker = Marker(filetree)
     res = marker.mark()
-    print(res[0])
-    print(res[1])
+    from pprint import pprint
+    pprint(res)
 
