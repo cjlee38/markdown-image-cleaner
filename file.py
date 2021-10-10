@@ -85,7 +85,10 @@ class ImageFile(File) :
         return self._count
 
 class FileTree :
-    
+    '''
+    It describe directories and files using Composite-pattern
+    currently just store directories and image-files(png, jpg, etc ...)
+    '''
     def __init__(self, root) :
         self._root = root
         self._tree = None
@@ -105,6 +108,8 @@ class FileTree :
         if p._name == path :
             return p
         for r in path.split(os.sep) :
+            if not p :
+                return None
             if r == '.' :
                 continue
             if r == '..' :

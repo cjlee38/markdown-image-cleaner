@@ -24,7 +24,8 @@ class Marker(AbstractMarker) :
         for parent, file in self.traverse() :
             check = self.checkoff(parent, file)
             if check :
-                marked['dangles'][parent + "/" + file] = check
+                pathfile = os.path.normpath(parent + "/" + file)
+                marked['dangles'][pathfile] = check
         marked['leaks'] = list(self._file_tree.get_garbages())
         return marked
 
@@ -38,13 +39,13 @@ class Marker(AbstractMarker) :
         '''
         collect dead links while reading each line.
         '''
-        deadlinks = []
+        deadlinks = {}
         pathfile = "/".join([parent, file])
         with open(pathfile, 'r', encoding = 'UTF-8') as f :
             for idx, line in enumerate(f.readlines()) :
                 image_link = self.is_image_link(line, parent)
                 if image_link and not self.pulse(image_link):
-                    deadlinks.append(DeadLink(idx, line, pathfile))
+                    deadlinks[idx] = line
         return deadlinks
 
     def is_image_link(self, line: str, parent: str) -> str :
@@ -63,7 +64,7 @@ class Marker(AbstractMarker) :
         '''
         if image_link.startswith("/") or image_link.startswith("http"):
             return image_link
-        return "/".join([parent, image_link])
+        return os.path.normpath("/".join([parent, image_link]))
             
     def pulse(self, link: str) -> bool:
         '''
@@ -75,22 +76,13 @@ class Marker(AbstractMarker) :
             return Requester.is_alive(link)
         return self._file_tree.is_alive(link)
 
-class DeadLink :
-    def __init__(self, idx, string, md) :
-        self._idx = idx
-        self._link =  RegexHandler.IMAGE_LINK.search(string).group(2)
-        self._md = md
-    
-    def __repr__(self) :
-        return f"{self._link}({self._md}, index : {self._idx})"
-
-
 if __name__ == '__main__' :
     print("  Test of Marker starts  ")
     if len(sys.argv) == 2 :
         os.chdir(sys.argv[1])
     filetree = FileTree(".")
     filetree.build()
+    # filetree.print()
     marker = Marker(filetree)
     res = marker.mark()
     from pprint import pprint
