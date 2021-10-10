@@ -89,13 +89,15 @@ class FileTree :
     It describe directories and files using Composite-pattern
     currently just store directories and image-files(png, jpg, etc ...)
     '''
-    def __init__(self, root) :
-        self._root = root
+    def __init__(self) :
+        self._root = None
         self._tree = None
     
-    def build(self) :
-        self._tree = Directory(self._root, ".")
+    def build(self, root: str) -> None:
+        self._root = root
+        self._tree = Directory(self._root, self._root)
         for parent, dirs, files in os.walk(self._root) :
+            # todo : check if it's ok
             p = self.find(parent)
             for dir in dirs :
                 p.add(Directory(dir, parent))
@@ -103,11 +105,12 @@ class FileTree :
                 if RegexHandler.is_pattern_match(file, RegexHandler.IMAGE_FILE) :
                     p.add(ImageFile(file, parent))
     
-    def find(self, path: str, debug = False) -> Component:
+    def find(self, path: str) -> Component:
         p = self._tree
         if p._name == path :
             return p
-        for r in path.split(os.sep) :
+        start = os.path.relpath(path, self._root)
+        for r in start.split(os.sep) :
             if not p :
                 return None
             if r == '.' :
@@ -125,7 +128,7 @@ class FileTree :
         return self._root
 
     def is_alive(self, pathfile) :
-        p = self.find(pathfile, debug = True)
+        p = self.find(pathfile)
         if p :
             p.increase()
             return True
@@ -144,10 +147,8 @@ class FileTree :
 
 if __name__ == '__main__' :
     print("file test code starts")
-    # os.path.isabs()
     os.chdir("./sample")
-    # os.chdir("/Users/cjlee/Desktop/workspace/markdown-image-cleaner")
-    f = FileTree(".")
-    f.build()
+    f = FileTree()
+    f.build(".")
     f.print()
     

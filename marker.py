@@ -5,6 +5,7 @@ from custom_enum import RegexHandler, ContentType
 from web import Requester
 from abc import *
 from file import *
+from utils import loud
 
 class AbstractMarker(ABC) :
     @abstractmethod
@@ -13,20 +14,19 @@ class AbstractMarker(ABC) :
 
 class Marker(AbstractMarker) :
 
-    def __init__(self, file_tree) :
-        self._file_tree = file_tree
+    def __init__(self) :
+        self._file_tree = None
 
-    def mark(self) :
-        marked = {
-            'dangles' : {},
-            'leaks' : []
-        }
+    def mark(self, file_tree) :
+        self._file_tree = file_tree
+        marked = { 'dangles' : {}, 'leaks' : [] }
         for parent, file in self.traverse() :
             check = self.checkoff(parent, file)
             if check :
                 pathfile = os.path.normpath(parent + "/" + file)
                 marked['dangles'][pathfile] = check
         marked['leaks'] = list(self._file_tree.get_garbages())
+        loud(f"dangles_count = {sum([len(v) for k, v in marked['dangles'].items()])}, leaks_count = {len(marked['leaks'])}")
         return marked
 
     def traverse(self) -> tuple :
@@ -80,11 +80,11 @@ if __name__ == '__main__' :
     print("  Test of Marker starts  ")
     if len(sys.argv) == 2 :
         os.chdir(sys.argv[1])
-    filetree = FileTree(".")
-    filetree.build()
+    filetree = FileTree()
+    filetree.build(".")
     # filetree.print()
-    marker = Marker(filetree)
-    res = marker.mark()
+    marker = Marker()
+    res = marker.mark(filetree)
     from pprint import pprint
     pprint(res)
 
