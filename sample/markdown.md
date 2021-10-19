@@ -2,17 +2,17 @@
 
 This is a sample file.  
 
-## 1 : alive & linked
+## 1 : OK
 ![AliveAndLinked](./images/AliveAndLinked.png)
 
-
-## 2 : alive but unlinked
+## 2 : Leaks
 
 ![AliveButUnlinked](./images/_AliveButUnlinked.png)
 
-## 3 : dead
+## 3 : Dangles
 
 ![Dead](./images/Dead.png)
+
 
 ## 4 : http alive
 

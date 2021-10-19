@@ -1,15 +1,13 @@
 from abc import *
 import utils
+from utils import loud
 import os
 import shutil
 
 class AbstractCleaner(metaclass = ABCMeta) :
     
-    def __init__(self, marked) :
-        self._marked = marked
-
     @abstractmethod
-    def clean(self):
+    def clean(self, marked):
         pass
     
 class Sweeper(AbstractCleaner) :
@@ -18,7 +16,7 @@ class Sweeper(AbstractCleaner) :
     '''
     def __init__(self) :
         pass
-    def clean(self) :
+    def clean(self, marked) :
         pass
 
 class Collector(AbstractCleaner) :
@@ -30,9 +28,9 @@ class Collector(AbstractCleaner) :
     LEAKS_FOLDER = "MIC_LEAKS"
     DANGLES_FOLDER = "MIC_DANGLES_BACKUP"
 
-    def clean(self) :
-        self.comment(self._marked['dangles'])
-        self.throwaway(self._marked['leaks'])
+    def clean(self, marked) :
+        self.comment(marked['dangles'])
+        self.throwaway(marked['leaks'])
 
     def throwaway(self, leaks: list) -> None :
         leaks_tosave = self.create_folder(Collector.LEAKS_FOLDER)
@@ -81,15 +79,13 @@ class Displayer(AbstractCleaner) :
     '''
     just show file as tree
     '''
-    # def __init__(self, deadlinks, unlinks) :
-    #     super().__init__(deadlinks, unlinks)
 
-    def clean(self) :
-        self.display()
+    def clean(self, marked) :
+        self.display(marked)
 
-    def display(self) :
-        dangles = self._marked['dangles']
-        leaks = self._marked['leaks']
+    def display(self, marked) :
+        dangles = marked['dangles']
+        leaks = marked['leaks']
         print (" ======= leaks ======= ")
         for leak in leaks :
             print(leak)
@@ -97,19 +93,4 @@ class Displayer(AbstractCleaner) :
         for dangle in dangles :
             print(dangle)
             for index in dangles[dangle] :
-                print("\t", index, "=>\t", dangles[dangle][index])
-
-if __name__ == '__main__' :
-    import os
-    import sys
-    from file import FileTree
-    from marker import Marker
-    print("  Test of Cleaner starts  ")
-    if len(sys.argv) == 2 :
-        os.chdir(sys.argv[1])
-    filetree = FileTree(".")
-    filetree.build()
-    marker = Marker(filetree)
-    res = marker.mark()
-    displayer = Collector(res)
-    displayer.clean()
+                print("\t", index, "=>\t", dangles[dangle][index][:-1]) # -1 to delete \n

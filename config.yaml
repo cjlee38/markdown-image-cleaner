@@ -1,0 +1,11 @@
+###
+# Directory option must be directory, not file.
+# Ignore_image and ignore_markdown options can be file,
+# directory(absolute and relative both fine)
+###
+directory: "./sample"
+clean_type: "display" # or collect, or sweep
+ignore_image:
+  - "./sample/ignoring/imgs"
+ignore_markdown:
+  - "sample/ignoring/md"

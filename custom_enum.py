@@ -1,12 +1,9 @@
 from enum import Enum, auto
 import re
-class CleanType(Enum) :
-	DISPLAY = auto()
-	SWEEP = auto()
 
 class RegexHandler() :
 	MARKDOWN_FILE = re.compile(".md$|.markdown$")
-	IMAGE_FILE = re.compile(".jpg$|.png$")
+	IMAGE_FILE = re.compile(".jpg$|.png$|.gif$")
 	IMAGE_LINK = re.compile("!\[(.*?)\]\((.*?)\)")
 
 	@staticmethod

@@ -1,10 +1,11 @@
 import os
 import re
 import sys
-from custom_enum import RegexHandler, ContentType
+from custom_enum import RegexHandler
 from web import Requester
 from abc import *
 from file import *
+from utils import loud
 
 class AbstractMarker(ABC) :
     @abstractmethod
@@ -13,24 +14,37 @@ class AbstractMarker(ABC) :
 
 class Marker(AbstractMarker) :
 
-    def __init__(self, file_tree) :
-        self._file_tree = file_tree
+    def __init__(self) :
+        self._file_tree = None
+        self._line_count = 0
 
-    def mark(self) :
-        marked = {
-            'dangles' : {},
-            'leaks' : []
-        }
-        for parent, file in self.traverse() :
+    def mark(self, file_tree: FileTree, ignores: list) -> dict:
+        self._file_tree = file_tree
+        marked = { 'dangles' : {}, 'leaks' : [] }
+        for parent, file in self.traverse(ignores) :
             check = self.checkoff(parent, file)
             if check :
                 pathfile = os.path.normpath(parent + "/" + file)
                 marked['dangles'][pathfile] = check
         marked['leaks'] = list(self._file_tree.get_garbages())
         return marked
+    
+    def summary(self, marked: dict) -> None :
+        counts = {
+            'leaks' : {'all' : 0, 'fail' : 0 },
+            'dangles' : { 'all' : 0, 'fail' : 0 }
+        }
+        dangle_all = self._line_count
+        dangle_fail = sum([len(v) for k, v in marked['dangles'].items()])
+        leak_all = self._file_tree._image_count
+        leak_fail = len(marked['leaks'])
+        
+        loud(f"LEAKS\t\t= \t{leak_fail}/{leak_all}({leak_fail * 100/ leak_all}%)")
+        loud(f"DANGLES\t= \t{dangle_fail}/{dangle_all}({dangle_fail * 100/ dangle_all}%)")
 
-    def traverse(self) -> tuple :
+    def traverse(self, ignores: list) -> tuple :
         for parent, dirs, files in os.walk(self._file_tree.get_root()) :
+            dirs[:] = utils.exclude_ignores(parent, dirs, ignores)
             for file in files :
                 if RegexHandler.is_pattern_match(file, RegexHandler.MARKDOWN_FILE) :
                     yield parent, file
@@ -44,8 +58,10 @@ class Marker(AbstractMarker) :
         with open(pathfile, 'r', encoding = 'UTF-8') as f :
             for idx, line in enumerate(f.readlines()) :
                 image_link = self.is_image_link(line, parent)
-                if image_link and not self.pulse(image_link):
-                    deadlinks[idx] = line
+                if image_link :
+                    self._line_count += 1
+                    if not self.pulse(image_link):
+                        deadlinks[idx] = line
         return deadlinks
 
     def is_image_link(self, line: str, parent: str) -> str :
@@ -60,31 +76,18 @@ class Marker(AbstractMarker) :
 
     def rebuild_link(self, parent: str, image_link: str) :
         '''
-        match image_link path to real path
+        match image_link path to full absolute path
         '''
-        if image_link.startswith("/") or image_link.startswith("http"):
+        if image_link.startswith("http"):
             return image_link
-        return os.path.normpath("/".join([parent, image_link]))
+        prefix = self._file_tree.get_root() if image_link.startswith(os.sep) else parent
+        return os.path.normpath("/".join([prefix, image_link]))
             
     def pulse(self, link: str) -> bool:
         '''
         Heart beat to image_file.
-        If it is a kind of file, FileTree gonna check if it's alive.
-        Or a kind of http, Requester gonna check.
         '''
         if link.startswith('http') :
             return Requester.is_alive(link)
         return self._file_tree.is_alive(link)
-
-if __name__ == '__main__' :
-    print("  Test of Marker starts  ")
-    if len(sys.argv) == 2 :
-        os.chdir(sys.argv[1])
-    filetree = FileTree(".")
-    filetree.build()
-    # filetree.print()
-    marker = Marker(filetree)
-    res = marker.mark()
-    from pprint import pprint
-    pprint(res)
 

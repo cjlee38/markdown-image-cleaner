@@ -1,6 +1,7 @@
 from custom_enum import RegexHandler
 import os
 from abc import *
+import utils
 
 class Component(ABC) :
 
@@ -89,25 +90,30 @@ class FileTree :
     It describe directories and files using Composite-pattern
     currently just store directories and image-files(png, jpg, etc ...)
     '''
-    def __init__(self, root) :
-        self._root = root
+    def __init__(self) :
+        self._root = None
         self._tree = None
+        self._image_count = 0
     
-    def build(self) :
-        self._tree = Directory(self._root, ".")
+    def build(self, root: str, ignores: list) -> None:
+        self._root = root
+        self._tree = Directory(self._root, self._root)
         for parent, dirs, files in os.walk(self._root) :
+            dirs[:] = utils.exclude_ignores(parent, dirs, ignores) # [:] needed to modifies in-place
             p = self.find(parent)
             for dir in dirs :
                 p.add(Directory(dir, parent))
             for file in files :
                 if RegexHandler.is_pattern_match(file, RegexHandler.IMAGE_FILE) :
                     p.add(ImageFile(file, parent))
+                    self._image_count += 1
     
-    def find(self, path: str, debug = False) -> Component:
+    def find(self, path: str) -> Component:
         p = self._tree
         if p._name == path :
             return p
-        for r in path.split(os.sep) :
+        start = os.path.relpath(path, self._root)
+        for r in start.split(os.sep) :
             if not p :
                 return None
             if r == '.' :
@@ -124,8 +130,8 @@ class FileTree :
     def get_root(self) :
         return self._root
 
-    def is_alive(self, pathfile) :
-        p = self.find(pathfile, debug = True)
+    def is_alive(self, pathfile: str) -> bool :
+        p = self.find(pathfile)
         if p :
             p.increase()
             return True
@@ -140,14 +146,4 @@ class FileTree :
                 yield from self._get_garbages(child)
             elif isinstance(child, ImageFile) and child._count == 0 :
                 yield child._path + "/" + child._name
-        
 
-if __name__ == '__main__' :
-    print("file test code starts")
-    # os.path.isabs()
-    os.chdir("./sample")
-    # os.chdir("/Users/cjlee/Desktop/workspace/markdown-image-cleaner")
-    f = FileTree(".")
-    f.build()
-    f.print()
-    
