@@ -31,7 +31,6 @@ class Collector(AbstractCleaner) :
     def clean(self, marked) :
         self.comment(marked['dangles'])
         self.throwaway(marked['leaks'])
-        loud("collecting done")
 
     def throwaway(self, leaks: list) -> None :
         leaks_tosave = self.create_folder(Collector.LEAKS_FOLDER)
@@ -95,18 +94,3 @@ class Displayer(AbstractCleaner) :
             print(dangle)
             for index in dangles[dangle] :
                 print("\t", index, "=>\t", dangles[dangle][index][:-1]) # -1 to delete \n
-
-if __name__ == '__main__' :
-    import os
-    import sys
-    from file import FileTree
-    from marker import Marker
-    print("  Test of Cleaner starts  ")
-    if len(sys.argv) == 2 :
-        os.chdir(sys.argv[1])
-    filetree = FileTree()
-    filetree.build(".")
-    marker = Marker(filetree)
-    res = marker.mark()
-    displayer = Collector(res)
-    displayer.clean()

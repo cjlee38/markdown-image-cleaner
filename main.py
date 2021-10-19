@@ -2,53 +2,74 @@ from marker import Marker
 from cleaner import *
 from custom_enum import *
 from file import *
-from utils import loud
+from utils import loud, exists
+from argument import ArgParser
+
 import sys
-import argparse
+import yaml
 
-def config() :
-    clean_type = set_clean_type()
-
-def set_clean_type() :
-    if len(sys.argv) == 1 :
-        clean_type = CleanType.SWEEP
 
 
 '''
 # Todo
 ignore folder or file settings
 '''
-if __name__ == "__main__" :
-    parser = argparse.ArgumentParser(description = 'markdown-image-cleaner')
-    parser.add_argument('--clean-type', '-c', 
-                        type = str,
-                        default = "display",
-                        choices = ["display", "collect", "sweep"],
-                        help = "Determine type to clean. \
-                            Options are display, collect, sweep. \
-                            Default value is display")
-    parser.add_argument('--directory', '-d',
-                        type = str,
-                        default = ".",
-                        help = "Change to direcotry if specified. \
-                            Default is current directory(.)")
-    args = parser.parse_args()
+
+def validate(args) :
     if len(sys.argv) == 1 :
         loud("There is no arguments.")
         loud("You can print usage by command 'python main.py -h'")
-    root = args.directory
-    cleantype = args.clean_type
+
+    exists(args['directory'])
+    for i in args['ignore_image'] :
+        exists(i)
+    for i in args['ignore_markdown'] :
+        exists(i)
+
+def warning(args) :
+    if args['clean_type'] == 'sweep' :
+        loud("You chose 'sweep' as clean type. \
+            This action is irreversible. \
+            If want to continue, input 'Y/y'")
+        YN = input()
+        if YN.lower() != 'y' :
+            raise Exception("Halted by user.")
+            
+def load_configfile() :
+    CONFIG_FILE = "config.yaml"
+    with open(CONFIG_FILE, 'r', encoding = 'UTF-8') as f :
+        configs = yaml.load(f, Loader = yaml.FullLoader)
+    return configs
+
+if __name__ == "__main__" :
+    '''
+    # todo
+    show summary
+    "/".join -> os.sep.join(as function)
+    '''
+    
+    configs = load_configfile()
+    parser = ArgParser()
+    args = parser.parse(configs)
+    validate(args)
+    warning(args)
+
     
     filetree = FileTree()
-    filetree.build(root)
+    filetree.build(args['directory'], args['ignore_image'])
 
     marker = Marker()
-    marked = marker.mark(filetree)
+    marked = marker.mark(filetree, args['ignore_markdown'])
     
     cleaners = {
         'display' : Displayer(),
         'collect' : Collector(),
         'sweep' : Sweeper()
     }
-    cleaner = cleaners.get(cleantype)
+    cleaner = cleaners.get(args['clean_type'])
     cleaner.clean(marked)
+    
+    summary = marker.summary(marked)
+    summary
+    # loud(summary)
+
