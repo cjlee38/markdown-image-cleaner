@@ -8,7 +8,9 @@ It is written in Python 3.8, but migth be used in different version.
 (In progress...)
 
 # Usage
-You can also see help described below with command `python3 main.py --help`
+`python3 main.py <parameters>`
+
+> You can also see help described below with command `python3 main.py --help`
 
 ## Parameters
 1. `--clean-type`, `-c` : determine type to clean. options are `display`, `collect`, `sweep`
