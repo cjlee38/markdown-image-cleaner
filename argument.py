@@ -18,11 +18,11 @@ class ArgParser() :
 		self.parser.add_argument('--ignore-image', '-i',
 							type = str,
 							nargs = '+',
-							help = "Ignore directories which contain markdown files.")
+							help = "Ignore directories which contain image files.")
 		self.parser.add_argument('--ignore-markdown', '-m',
 							type = str,
 							nargs = '+',
-							help = "Ignore directories which contain image files.")
+							help = "Ignore directories which contain markdown files.")
 
 	def parse(self, configs: dict) -> dict :
 		args = self.parser.parse_args()
